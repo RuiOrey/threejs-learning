@@ -34,6 +34,12 @@ function init() {
 
 	camera.position.z = 200;
 	scene.add(cube);
+
+	//LIGHT
+	light = new THREE.PointLight( 0xffffff, 1, 0 );
+	light.position.z = 200;
+	scene.add(light);
+
 }
 
 
