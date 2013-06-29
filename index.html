@@ -2,11 +2,46 @@
 
 <body>
 
-<script src="../build/three.js"></script>
+<script src="./build/three.js"></script>
 
 <script>
+"use strict";
 
 
+var camera, scene, renderer;
+var cube, light;
+
+
+init();
+
+render();
+
+
+function init() {
+	scene = new THREE.Scene();
+	camera = new THREE.PerspectiveCamera( 70, window.innerWidth/window.innerHeight, 0.01, 10000 );
+	renderer = new THREE.WebGLRenderer();
+	renderer.setSize(window.innerWidth, window.innerHeight);
+	document.body.appendChild(renderer.domElement);
+
+	// start
+	
+	cube = new THREE.Mesh(
+	    new THREE.CubeGeometry( 100, 100, 100, 1, 1, 1 ),
+	    new THREE.MeshLambertMaterial( {color: 0xff0000} )
+	);
+
+
+	camera.position.z = 200;
+	scene.add(cube);
+}
+
+
+function render() {
+	cube.rotation.y += 0.05;
+	renderer.render(scene, camera);
+	requestAnimationFrame(render);
+}
 
 </script>
 
