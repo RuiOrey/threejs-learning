@@ -1,6 +1,6 @@
 <html>
 
-<body>
+<body style="margin:0px">
 
 <script src="./build/three.js"></script>
 
@@ -10,45 +10,119 @@
 
 var camera, scene, renderer;
 var cube, light;
+var dynamic=0.01;
+var dynamicIncrease=true;
 
 
 init();
 
 render();
 
-
+setupGui() ;
 function init() {
+
 	scene = new THREE.Scene();
-	camera = new THREE.PerspectiveCamera( 70, window.innerWidth/window.innerHeight, 0.01, 10000 );
+
 	renderer = new THREE.WebGLRenderer();
 	renderer.setSize(window.innerWidth, window.innerHeight);
+	renderer.setClearColorHex( 0x0, 0.0 );
+	renderer.shadowMapEnabled=true;
 	document.body.appendChild(renderer.domElement);
+
+
+	camera = new THREE.PerspectiveCamera( 35, window.innerWidth/window.innerHeight, 1, 10000 );
+
+	camera.position.z = 1000;
+	//cameraControls = new THREE.OrbitAndPanControls(camera, renderer.domElement);
+	//cameraControls.target.set(0,310,0);
 
 	// start
 	
 	cube = new THREE.Mesh(
 	    new THREE.CubeGeometry( 100, 100, 100, 1, 1, 1 ),
-	    new THREE.MeshLambertMaterial( {color: 0xff0000} )
+	    new THREE.MeshPhongMaterial( {color: 0x0000ff} )
 	);
 
+	cube.r=250;
+	cube.b=0;
 
-	camera.position.z = 200;
+
 	scene.add(cube);
-
+	cube.rotation.z=-Math.PI;
+	cube.position.x=-200;
+	cube.castShadow=true;
+	//cube.receiveShadow=true;
 	//LIGHT
-	light = new THREE.PointLight( 0xffffff, 1, 0 );
-	light.position.z = 200;
+
+	scene.add( new THREE.AmbientLight( 0x000000 ) );
+
+
+	light = new THREE.SpotLight(0xffffFF);
+	light.position.set(0,1000,1000);
+
+	//light.angle = 20 * Math.PI / 180;
+	//light.exponent = 1;
+	light.target.position.set( 0, -100, 0 );
+    light.castShadow=true;
 	scene.add(light);
 
+	//floor
+
+	var solidGround = new THREE.Mesh(
+		new THREE.PlaneGeometry( 10000, 10000 ),
+		new THREE.MeshPhongMaterial({ color: 0xFFFFFF,
+			// polygonOffset moves the plane back from the eye a bit, so that the lines on top of
+			// the grid do not have z-fighting with the grid:
+			// Factor == 1 moves it back relative to the slope (more on-edge means move back farther)
+			// Units == 4 is a fixed amount to move back, and 4 is usually a good value
+			polygonOffset: true, polygonOffsetFactor: 1.0, polygonOffsetUnits: 4.0
+		}));
+	solidGround.rotation.x = -Math.PI / 4;
+	solidGround.castShadow = true;
+	solidGround.receiveShadow = true;
+
+	solidGround.position.y=cube.position.y-200;
+	scene.add( solidGround );
+
+	
 }
 
 
 function render() {
-	cube.rotation.y += 0.05;
+
+	if (cube.rotation.z>0.001)
+		dynamicIncrease=false;
+	if (cube.rotation.z<0.001)
+		dynamicIncrease=true;
+
+
+
+	if (dynamicIncrease===true)
+	dynamic+=0.0005;
+	else
+	dynamic -= 0.0005;
+
+	cube.rotation.z+=dynamic;
+	//camera.position.y+=dynamic*150;
+	cube.position.x+=dynamic*70;
+	cube.rotation.y -= dynamic;
+	cube.rotation.x -= dynamic/1;
+	light.position.y =-100;
 	renderer.render(scene, camera);
 	requestAnimationFrame(render);
+	Coordinates.drawGrid({size:10000,scale:11});
+	cube.materials[ 0 ].color.b-=dynamic;
+	
 }
+function setupGui() {
+	var effectController = {
+		shadowBias: 0.00001	// hack to make dat.GUI show decimal places
+	};
 
+	var gui = new dat.GUI();
+	gui.add( effectController, "shadowBias", -0.01, 0.01 ).name("shadow bias");
+	gui.close();
+}
 </script>
 
 </body>
